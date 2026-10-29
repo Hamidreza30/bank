@@ -62,6 +62,8 @@ class Bank:
                 return False
 
             receiver["balance"] += money
+            transaction = Transaction(sender_number, receiver_number, money)
+            self.transact.append(transaction)
             return True
 
         sender = self.get_user_by_account_number(sender_number)
@@ -86,11 +88,8 @@ class Bank:
         sender["balance"] -= money
         receiver["balance"] += money
 
-        self.transact.append({
-            "sender": sender_number,
-            "receiver": receiver_number,
-            "money": money
-        })
+        transaction = Transaction(sender_number, receiver_number, money)
+        self.transact.append(transaction)
         return True
 
 
@@ -167,11 +166,11 @@ class Bank:
 #
 # bank.save()
 
-bank=Bank('Saman')
-bank.load()
-print(bank.accounts)
-bank.transaction('8868','4097',100)
-bank.transaction('8868','2913',100)
+# bank=Bank('Saman')
+# bank.load()
+# print(bank.accounts)
+# bank.transaction('8868','4097',100)
+# bank.transaction('8868','2913',100)
 #Transaction('8868','4097',100)
 
 
