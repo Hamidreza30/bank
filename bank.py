@@ -1,169 +1,181 @@
 import random
+import datetime
 
+class User:
+    def __init__(self, name, age):
+        self.name = name
+        self.age =int(age)
+        self.account_number = str(random.randint(999, 9999))
+
+    def __str__(self):
+        return f"name:{self.name}, age:{self.age} , account_number:{self.account_number} "
+
+#____________________________________________
+
+class Transaction:
+
+    def __init__(self, sender, receiver, money):
+        self.sender = sender
+        self.receiver = receiver
+        self.money = int(money)
+        self.datetime = datetime.datetime.now()
+
+    def __str__(self):
+        return (
+            f"Sender: {self.sender}\n"
+            f"Receiver: {self.receiver}\n"
+            f"Money: {self.money}\n"
+            f"Datetime: {self.datetime}"
+        )
+#_________________________________________
 
 class Bank:
-    def __init__(self, bank):
-        self.bank = bank
-        self.accounts = {}
-        self.transactions = []
+    def __init__(self, name):
+        self.name = name
+        self.transact = []
+        self.accounts = []
 
-    def register(self, name, age):
-        account_number = str(random.randint(1000, 9999))
+    def sign_up(self, name, age):
+        user = User(name, age)
 
-        while account_number in self.accounts:
-            account_number = str(random.randint(1000, 9999))
-
-        self.accounts[account_number] = {
-            "name": name,
-            "age": age,
+        account = {
+            "account_number": user.account_number,
+            "name": user.name,
+            "age": user.age,
             "balance": 0
         }
 
-        print("Registration successful!")
-        print(f"Your account number is: {account_number}")
+        self.accounts.append(account)
+        return account
 
-        self.save()
+    def transaction(self, sender_number, receiver_number, money):
 
-        return account_number
+        if sender_number == '0000':
+            receiver = self.get_user_by_account_number(receiver_number)
 
-    def transaction(self, sender, receiver, money):
-
-        if sender == "0000":
-
-            if receiver not in self.accounts:
+            if receiver is None:
                 print("Receiver account does not exist")
                 return False
 
-            self.accounts[receiver]["balance"] += money
+            if money <= 0:
+                print("Money must be greater than zero")
+                return False
 
-            self.transactions.append(
-                (sender, receiver, money)
-            )
-
-            self.save()
-
+            receiver["balance"] += money
             return True
 
-        if sender not in self.accounts:
+        sender = self.get_user_by_account_number(sender_number)
+        receiver = self.get_user_by_account_number(receiver_number)
+
+        if sender is None:
             print("Sender account does not exist")
             return False
 
-        if receiver not in self.accounts:
+        if receiver is None:
             print("Receiver account does not exist")
             return False
 
-        if self.accounts[sender]["balance"] < money:
-            print("The account has no money")
+        if money <= 0:
+            print("Money must be greater than zero")
             return False
 
-        self.accounts[sender]["balance"] -= money
-        self.accounts[receiver]["balance"] += money
+        if sender["balance"] < money:
+            print("Sender account balance less than money")
+            return False
 
-        self.transactions.append(
-            (sender, receiver, money)
-        )
+        sender["balance"] -= money
+        receiver["balance"] += money
 
-        self.save()
-
+        self.transact.append({
+            "sender": sender_number,
+            "receiver": receiver_number,
+            "money": money
+        })
         return True
 
-    def balance_of(self, account_number):
 
+
+    def get_user_by_account_number(self, account_number):
+        for account in self.accounts:
+            if account["account_number"] == account_number:
+                return account
+        return None
+
+    def balance(self, account_number):
         if account_number == "0000":
             return -1
 
-        if account_number not in self.accounts:
-            return 0
+        account = self.get_user_by_account_number(account_number)
 
-        return self.accounts[account_number]["balance"]
+        if account is not None:
+            return account["balance"]
 
-    def history(self, account_number):
+        return False
 
-        history = []
 
-        for transaction in self.transactions:
-
-            sender, receiver, money = transaction
-
-            if sender == account_number or receiver == account_number:
-                history.append(transaction)
-
-        return history
 
     def save(self):
-
-        with open("bank.txt", "w") as file:
-
-            file.write(self.bank + "\n")
-
-            file.write("accounts\n")
+        with open('bank.txt', "w", encoding="utf-8") as file:
+            file.write(self.name + "\n")
 
             for account in self.accounts:
-
-                name = self.accounts[account]["name"]
-                age = self.accounts[account]["age"]
-                balance = self.accounts[account]["balance"]
-
                 file.write(
-                    account + "," +
-                    name + "," +
-                    str(age) + "," +
-                    str(balance) + "\n"
+                    f'{account["account_number"]},'
+                    f'{account["name"]},'
+                    f'{account["age"]},'
+                    f'{account["balance"]}\n'
                 )
 
-            file.write("transactions\n")
+        return "Data saved successfully!"
 
-            for transaction in self.transactions:
-
-                sender, receiver, money = transaction
-
-                file.write(
-                    sender + "," +
-                    receiver + "," +
-                    str(money) + "\n"
-                )
 
     def load(self):
+        file = open("bank.txt", "r")
 
-        with open("bank.txt", "r") as file:
-            lines = file.readlines()
+        lines = file.readlines()
 
-        self.bank = lines[0].strip()
+        file.close()
 
-        self.accounts = {}
+        self.name = lines[0].strip()
+        self.accounts = []
 
-        i = 2
+        for line in lines[1:]:
+            account_number, name, age, balance = line.strip().split(",")
 
-        while i < len(lines) and lines[i].strip() != "transactions":
-
-            account, name, age, balance = lines[i].strip().split(",")
-
-            self.accounts[account] = {
+            account = {
+                "account_number": account_number,
                 "name": name,
                 "age": int(age),
                 "balance": int(balance)
             }
 
-            i += 1
+            self.accounts.append(account)
 
-        self.transactions = []
+# bank=Bank('Saman')
+#
+# user1=User('ali',50)
+# user2=User('neda',19)
+# user3=User('mahdi',30)
+#
+# bank.sign_up(user1.name, user1.age)
+# bank.sign_up(user2.name, user2.age)
+# bank.sign_up(user3.name, user3.age)
+#
+# print(user1.account_number)
+# print(user2.account_number)
+# print(user3.account_number)
+#
+# bank.save()
 
-        i += 1
-
-        while i < len(lines):
-
-            sender, receiver, money = lines[i].strip().split(",")
-
-            self.transactions.append(
-                (sender, receiver, int(money))
-            )
-
-            i += 1
-
-
-bank = Bank("saderat")
-
+bank=Bank('Saman')
 bank.load()
-
 print(bank.accounts)
-print(bank.transactions)
+bank.transaction('8868','4097',100)
+bank.transaction('8868','2913',100)
+#Transaction('8868','4097',100)
+
+
+
+
+
+
